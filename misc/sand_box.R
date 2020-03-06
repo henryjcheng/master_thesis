@@ -102,9 +102,19 @@ diagnoes_icd_all <- bq_table_download(diagnoes_icd_all)
 #write.csv(diagnoes_icd_all, file="C:/Users/Henry/Desktop/Main/School/Master Thesis/Dataset/diagnoses_icd_all.csv",
 #          row.names=FALSE)
 
+# get diagnoses descriptions
+sql <- "SELECT  *
+        FROM    `physionet-data.mimiciii_clinical.d_icd_diagnoses`l"
+
+dx_desc <- bq_project_query(x=projectID, query=sql)
+dx_desc <- bq_table_download(dx_desc)
+
+write.csv(dx_desc, file="C:/Users/Dell XPS/Desktop/main/school/class/stats404/homework/HW3/dx_desc.csv",
+          row.names=FALSE)
+
 # join notes with diagnoses
 notes_diag <- notes_all %>% inner_join(diagnoes_icd_all, by = "HADM_ID")
-write.csv(notes_diag, file="C:/Users/Henry/Desktop/Main/School/Master Thesis/Dataset/text_dx.csv",
+write.csv(notes_diag, file="C:/Users/Dell XPS/Desktop/main/school/class/stats404/homework/HW3/text_dx.csv",
           row.names=FALSE)
 
 # alternatively, using one sql query, but this cause error because return size too large
