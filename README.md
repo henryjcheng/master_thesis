@@ -4,12 +4,12 @@ For UCLA MAS master thesis
 ## Work Directory
 Work directory should following this layout:  
 ```text
-.
-|- data
-     |- mimic
-|- program
+    .  
+    ├── data                   
+        ├── mimic       # contains csv files
+    ├── program         # contains repo     
+    └── README.md
 ```
-program folder contains the repo  
 _data/mimic_ folder contains the following csv files (downloaded from [MIMIC-III](https://physionet.org/content/mimiciii/1.4/)):
 ```text
 D_CPT.csv
