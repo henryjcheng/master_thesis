@@ -1,7 +1,5 @@
 # script to create mimic database using sqlite
-rm -rf ../../database
 mkdir ../../database
-
 sqlite3 ../../database/mimic.db \
     ".mode csv" \
     ".import "../../data/mimic/D_CPT.csv" d_cpt" \
