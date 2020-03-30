@@ -78,5 +78,23 @@ INSERT INTO d_items ("ROW_ID", "ITEMID", "LABEL", "ABBREVIATION",
   FROM _d_items_original;
 DROP TABLE _d_items_original;
 
+-- ========== diagnoses_icd ==========
+ALTER TABLE diagnoses_icd RENAME TO _diagnoses_icd_original;
+CREATE TABLE diagnoses_icd(
+  "ROW_ID" INTEGER NOT NULL PRIMARY KEY,
+  "SUBJECT_ID" INTEGER,
+  "HADM_ID" INTEGER,
+  "SEQ_NUM" INTEGER,
+  "ICD9_CODE" TEXT,
+  FOREIGN KEY ("SUBJECT_ID")
+    REFERENCES DIAGNOSES_ICD ("SUBJECT_ID")
+  FOREIGN KEY ("ICD9_CODE")
+    REFERENCES D_ICD_DIAGNOSES ("ICD9_CODE")
+);
+INSERT INTO diagnoses_icd ("ROW_ID", "SUBJECT_ID", "HADM_ID", "SEQ_NUM", "ICD9_CODE")
+  SELECT "ROW_ID", "SUBJECT_ID", "HADM_ID", "SEQ_NUM", "ICD9_CODE"
+  FROM _diagnoses_icd_original;
+DROP TABLE _diagnoses_icd_original;
+
 COMMIT;
 PRAGMA foreign_keys=on;
