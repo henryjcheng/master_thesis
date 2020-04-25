@@ -46,7 +46,7 @@ def find_num_box(text):
                 box_end.append(j)
 
     if len(box_beg) == len(box_end):
-        print(f'\n{len(box_beg)} of mas box(es) found!')
+        #print(f'\n{len(box_beg)} of mas box(es) found!')
         return len(box_beg)
     else:
         print('Extra box element in text!')
