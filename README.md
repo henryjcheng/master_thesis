@@ -23,6 +23,9 @@ PRESCRIPTIONS.csv
 PROCEDURES_ICD.csv
 ```
 
+# Development Notes
+1. write script to add clean text result to database
+
 
 
 
