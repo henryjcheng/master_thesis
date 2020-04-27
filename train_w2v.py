@@ -5,7 +5,9 @@ __status__ = "dev"
 This script trains word2vec model using MIMIC-III noteevets. 
 MIMIC-III use a mask box to de-identify PHI, which needs to be removed first.
 
-Reference: https://blog.cambridgespark.com/tutorial-build-your-own-embedding-and-use-it-in-a-neural-network-e9cde4a81296 
+Reference: https://blog.cambridgespark.com/tutorial-build-your-own-embedding-and-use-it-in-a-neural-network-e9cde4a81296
+
+Because of resource constraint, we'll train on only top 5 diagnosis.
 """
 import time
 import sqlite3
@@ -22,7 +24,13 @@ from nltk.tokenize import word_tokenize
 
 # load data
 conn = sqlite3.connect('../database/mimic.db')
-df = pd.read_sql_query("select TEXT from noteevents limit 10000;", conn)
+sql = 'SELECT a.TEXT ' \
+      'FROM noteevents a ' \
+      'INNER JOIN diagnoses_icd b ON '\
+      'a.hadm_id = b.hadm_id ' \
+      'WHERE b.icd9_code in (\'4019\', \'42731\', \'4280\', \'51881\', \'5849\');'
+
+df = pd.read_sql_query(sql, conn)
 #print(df['TEXT'][0])
 
 # clean mask box
@@ -44,8 +52,8 @@ print(f'{task} complete.    Total elapsed time: {time_elapsed}')
 
 # now we're ready to train w2v model, we will use the parameters
 # used in the original paper
-train_model = False
-model_name = 'w2v_10k_samples'
+train_model = True
+model_name = 'w2v_top5_diag'
 
 if train_model:
     time0 = time.time()
@@ -57,7 +65,7 @@ if train_model:
                    negative=15,
                    iter=10,
                    workers=multiprocessing.cpu_count())
-    w2v.save(f'../model/{model_name}.model')
+    w2v.save(open(f'../model/{model_name}.model', 'wb'))
 
     time_elapsed = time.time() - time0
     task = 'Train W2V model'
