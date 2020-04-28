@@ -5,9 +5,11 @@ __status__ = "dev"
 This module contains functions to clean de-identifying mask box 
 for MIMIC-III text
 """
+import time
+import sqlite3
+import pandas as pd
 
-
-def clean_mask_box(df, name_text_col='TEXT', name_new_col='text'):
+def clean_mask_box(df, name_text_col='TEXT', name_new_col='text_cleaned'):
     """
     This function removes mask box and create a new dataframe column.
     """
@@ -69,4 +71,21 @@ def remove_one_box(text):
 
 
 if __name__ == "__main__":
-    pass
+    # load data
+    conn = sqlite3.connect('../../database/mimic.db')
+    sql = 'SELECT row_id, hadm_id, TEXT FROM noteevents'
+    df = pd.read_sql_query(sql, conn)
+
+    # clean mask box
+    time0 = time.time()
+    df = clean_mask_box(df, )
+    # print(df['text'][0])
+    time_elapsed = time.time() - time0
+    task = 'Text cleaning'
+    print(f'{task} complete.    Total elapsed time: {time_elapsed}')
+
+    # write df to database
+    df.to_sql('notes_cleaned', conn, if_exists='replace')
+    print('df written to database.')
+
+    conn.close()
