@@ -30,7 +30,7 @@ sql = 'SELECT a.text_cleaned as text ' \
       'INNER JOIN (SELECT DISTINCT hadm_id '\
                   'FROM diagnoses_icd '\
                   'WHERE icd9_code in (\'4019\', \'42731\', \'4280\', \'51881\', \'5849\')) b ON '\
-      'a.hadm_id = b.hadm_id Limit 2000' \
+      'a.hadm_id = b.hadm_id' \
       ';'
 
 df = pd.read_sql_query(sql, conn)
@@ -62,34 +62,31 @@ def batch_tokenize(df, n_row=10000):
         n_partition = int(df.shape[0]/n_row)
     else:
         n_partition = int(df.shape[0]/n_row) + 1
+    print(f'Total number of batches: {n_partition}')
 
     for partition in range(n_partition):
+        time_batch0 = time.time()
         index_begin = partition * n_row
-        index_end = (partition + 1) * n_row
-
-        if index_end > df.shape[0]:
-            print(f'Processing batch {partition + 1}...    from index {index_begin} to index {df.shape[0]}')
-            df_batch = df[index_begin:].reset_index(drop=True)
-        else:
-            print(f'Processing batch {partition + 1}...    from index {index_begin} to index {index_end}')
-            df_batch = df[index_begin:index_end].reset_index(drop=True)
+        index_end = min((partition + 1) * n_row, df.shape[0])
+        df_batch = df[index_begin:index_end].reset_index(drop=True)
 
         df_batch['text_token'] = df_batch['text'].apply(lambda x: word_tokenize(x))
         df_tokenized = df_tokenized.append(df_batch)
 
+        time_diff = round(time.time() - time_batch0, 2)
+        print(f'Processed batch {partition + 1}...    From {index_begin} to {index_end}   Time elapsed: {time_diff}')
     return df_tokenized
 
 
-df = batch_tokenize(df, n_row=1000)
+df = batch_tokenize(df, n_row=10000)
 time_elapsed = time.time() - time0
 task = 'Tokenization'
 print(f'{task} complete.    Total elapsed time: {time_elapsed}')
-print(df.head())
 
 # now we're ready to train w2v model
 # parameters are chosen from original paper (min_count=5, size=50)
 # then reduce if crash due to lack of memory
-train_model = False
+train_model = True
 model_name = 'w2v_top5_diag'
 emb_dim = 50
 min_count = 5
