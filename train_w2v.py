@@ -9,6 +9,7 @@ Reference: https://blog.cambridgespark.com/tutorial-build-your-own-embedding-and
 
 Because of resource constraint, we'll train on only top 5 diagnosis.
 """
+import os
 import time
 import sqlite3
 import pandas as pd
@@ -45,18 +46,17 @@ print(f'df shape: {df.shape}')
 time0 = time.time()
 print('\n===== Tokenization =====')
 
-def batch_tokenize(df, n_row=10000):
+def batch_tokenize(df, path, n_row=10000):
     """
-    This function subsets pandas df into n_partition, then perform
-    tokenization on each subset.
+    This function does tokenization in batch through the following steps:
+    1. subsets pandas df by n_row
+    2. perform tokenization on the subset
+    3. export as csv to temp folder
+    4. repeat the process with next batch
 
-    n_row : number of rows in a partition
+    n_row : number of rows in a batch
             This determines how big of a batch the tokenization process need to handle
     """
-    # initialize empty dataframe, tokenized subset will be append
-    # to this dataframe
-    df_tokenized = pd.DataFrame(columns={'text':'',
-                                         'text_token':object()})
     # subsetting dataframe
     if df.shape[0]%n_row == 0:
         n_partition = int(df.shape[0]/n_row)
@@ -71,14 +71,28 @@ def batch_tokenize(df, n_row=10000):
         df_batch = df[index_begin:index_end].reset_index(drop=True)
 
         df_batch['text_token'] = df_batch['text'].apply(lambda x: word_tokenize(x))
-        df_tokenized = df_tokenized.append(df_batch)
+
+        file_name = f'df_batch{partition+1}.csv'
+        df_batch.to_csv(os.path.join(path, file_name), index=False)
 
         time_diff = round(time.time() - time_batch0, 2)
         print(f'Processed batch {partition + 1}...    From {index_begin} to {index_end}   Time elapsed: {time_diff}')
-    return df_tokenized
 
 
-df = batch_tokenize(df, n_row=10000)
+partition_save_path = '../temp'
+batch_tokenize(df, partition_save_path, n_row=25000)
+
+# load partition
+df_tokenized = pd.DataFrame(columns={'text':'',
+                                     'text_token':object()})
+for file in os.listdir(partition_save_path):
+    load_path = os.path.join(partition_save_path, file)
+
+    # when saving as csv, list becomes text string, so need to convert it back to list using converters
+    df_temp = pd.read_csv(load_path,
+                          converters={"text_token": lambda x: x.strip("[]").replace("'", "").split(", ")})
+    df_tokenized = df_tokenized.append(df_temp)
+
 time_elapsed = time.time() - time0
 task = 'Tokenization'
 print(f'{task} complete.    Total elapsed time: {time_elapsed}')
@@ -89,6 +103,7 @@ print(f'{task} complete.    Total elapsed time: {time_elapsed}')
 train_model = True
 model_name = 'w2v_top5_diag'
 emb_dim = 50
+
 min_count = 5
 
 print('\n===== Word2Vec model =====')
@@ -98,7 +113,7 @@ if train_model:
     print(f'dimension: {emb_dim}')
     print(f'min count: {min_count}')
 
-    w2v = Word2Vec(df['text_token'].tolist(),
+    w2v = Word2Vec(df_tokenized['text_token'].tolist(),
                    size=emb_dim,
                    window=5,
                    min_count=min_count,
