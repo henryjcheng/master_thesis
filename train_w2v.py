@@ -34,7 +34,7 @@ sql = 'SELECT a.text_cleaned as text ' \
       'a.hadm_id = b.hadm_id' \
       ';'
 
-df = pd.read_sql_query(sql, conn)
+df = pd.read_sql_query(sql, conn, chunksize=10000)
 time_elapsed = time.time() - time0
 task = 'Loading data'
 print(f'{task} complete.    Total elapsed time: {time_elapsed}')
@@ -45,6 +45,13 @@ print(f'df shape: {df.shape}')
 # and do batch tokenization
 time0 = time.time()
 print('\n===== Tokenization =====')
+# try out tokenization using chunksize
+for chunk in df:
+    df['text_token'] = df['text'].apply(lambda x: word_tokenize(x))
+
+df = pd.concat(df, ignore_index=True)
+
+print(df.head())
 
 def batch_tokenize(df, path, n_row=10000):
     """
@@ -78,20 +85,29 @@ def batch_tokenize(df, path, n_row=10000):
         time_diff = round(time.time() - time_batch0, 2)
         print(f'Processed batch {partition + 1}...    From {index_begin} to {index_end}   Time elapsed: {time_diff}')
 
-
 partition_save_path = '../temp'
-batch_tokenize(df, partition_save_path, n_row=25000)
+
+# set to False if already created partition csv files
+partition = False
+if partition:
+    batch_tokenize(df, partition_save_path, n_row=25000)
+else:
+    pass
 
 # load partition
-df_tokenized = pd.DataFrame(columns={'text':'',
-                                     'text_token':object()})
-for file in os.listdir(partition_save_path):
-    load_path = os.path.join(partition_save_path, file)
+if False:
+    df_tokenized = pd.DataFrame(columns={'text':'',
+                                         'text_token':object()})
+    for i, file in enumerate(os.listdir(partition_save_path)):
+        load_path = os.path.join(partition_save_path, file)
 
-    # when saving as csv, list becomes text string, so need to convert it back to list using converters
-    df_temp = pd.read_csv(load_path,
-                          converters={"text_token": lambda x: x.strip("[]").replace("'", "").split(", ")})
-    df_tokenized = df_tokenized.append(df_temp)
+        # when saving as csv, list becomes text string, so need to convert it back to list using converters
+        df_temp = pd.read_csv(load_path,
+                              converters={"text_token": lambda x: x.strip("[]").replace("'", "").split(", ")})
+        df_tokenized = df_tokenized.append(df_temp)
+
+        n_row = df_tokenized.shape[0]
+        print(f'Processed {i + 1} csv files.    Number of rows in df: {n_row}')
 
 time_elapsed = time.time() - time0
 task = 'Tokenization'
