@@ -31,14 +31,14 @@ sql = 'SELECT a.text_cleaned as text ' \
       'INNER JOIN (SELECT DISTINCT hadm_id '\
                   'FROM diagnoses_icd '\
                   'WHERE icd9_code in (\'4019\', \'42731\', \'4280\', \'51881\', \'5849\')) b ON '\
-      'a.hadm_id = b.hadm_id' \
+      'a.hadm_id = b.hadm_id limit 3000' \
       ';'
 
-df = pd.read_sql_query(sql, conn, chunksize=10000)
+df = pd.read_sql_query(sql, conn, chunksize=1000)
 time_elapsed = time.time() - time0
 task = 'Loading data'
 print(f'{task} complete.    Total elapsed time: {time_elapsed}')
-print(f'df shape: {df.shape}')
+#print(f'df shape: {df.shape}')
 
 # first, we need to tokenize sentences using NLTK library
 # because passing the entire dataset lead to program crash, we will subset dataframe
@@ -46,11 +46,11 @@ print(f'df shape: {df.shape}')
 time0 = time.time()
 print('\n===== Tokenization =====')
 # try out tokenization using chunksize
-for chunk in df:
-    df['text_token'] = df['text'].apply(lambda x: word_tokenize(x))
+for i, chunk in enumerate(df):
+    print(f'Processing batch {i+1}...')
+    chunk['text_token'] = chunk['text'].apply(lambda x: word_tokenize(x))
 
-df = pd.concat(df, ignore_index=True)
-
+df = pd.concat([chunk for chunk in df])
 print(df.head())
 
 def batch_tokenize(df, path, n_row=10000):
@@ -116,7 +116,7 @@ print(f'{task} complete.    Total elapsed time: {time_elapsed}')
 # now we're ready to train w2v model
 # parameters are chosen from original paper (min_count=5, size=50)
 # then reduce if crash due to lack of memory
-train_model = True
+train_model = False
 model_name = 'w2v_top5_diag'
 emb_dim = 50
 
