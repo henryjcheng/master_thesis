@@ -18,8 +18,8 @@ import multiprocessing
 
 # for tokenization
 # if first time using NLTK, run the following 2 lines
-#import nltk
-#nltk.download('punkt')
+import nltk
+nltk.download('punkt')
 from nltk.tokenize import word_tokenize
 
 # load data
