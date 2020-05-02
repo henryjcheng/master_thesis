@@ -34,7 +34,7 @@ sql = 'SELECT a.text_cleaned as text ' \
       'a.hadm_id = b.hadm_id limit 3000' \
       ';'
 
-df = pd.read_sql_query(sql, conn, chunksize=1000)
+df = pd.read_sql_query(sql, conn)
 time_elapsed = time.time() - time0
 task = 'Loading data'
 print('{} complete.    Total elapsed time: {}'.format(task, time_elapsed))
