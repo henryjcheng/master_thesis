@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # print(df['text'][0])
     time_elapsed = time.time() - time0
     task = 'Text cleaning'
-    print(f'{task} complete.    Total elapsed time: {time_elapsed}')
+    print('{} complete.    Total elapsed time: {}'.format(task, time_elapsed))
 
     # write df to database
     df.to_sql('notes_cleaned', conn, if_exists='replace')
