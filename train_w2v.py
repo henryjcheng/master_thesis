@@ -18,8 +18,8 @@ import multiprocessing
 
 # for tokenization
 # if first time using NLTK, run the following 2 lines
-import nltk
-nltk.download('punkt')
+#import nltk
+#nltk.download('punkt')
 from nltk.tokenize import word_tokenize
 
 # load data
@@ -31,7 +31,7 @@ sql = 'SELECT a.text_cleaned as text ' \
       'INNER JOIN (SELECT DISTINCT hadm_id '\
                   'FROM diagnoses_icd '\
                   'WHERE icd9_code in (\'4019\', \'42731\', \'4280\', \'51881\', \'5849\')) b ON '\
-      'a.hadm_id = b.hadm_id limit 3000' \
+      'a.hadm_id = b.hadm_id' \
       ';'
 
 df = pd.read_sql_query(sql, conn)
