@@ -37,7 +37,7 @@ sql = 'SELECT a.text_cleaned as text ' \
 df = pd.read_sql_query(sql, conn, chunksize=1000)
 time_elapsed = time.time() - time0
 task = 'Loading data'
-print(f'{task} complete.    Total elapsed time: {time_elapsed}')
+print('{} complete.    Total elapsed time: {}'.format(task, time_elapsed))
 #print(f'df shape: {df.shape}')
 
 # first, we need to tokenize sentences using NLTK library
@@ -50,12 +50,12 @@ df['text_token'] = df['text'].apply(lambda x: word_tokenize(x))
 
 time_elapsed = time.time() - time0
 task = 'Tokenization'
-print(f'{task} complete.    Total elapsed time: {time_elapsed}')
+print('{} complete.    Total elapsed time: {}'.format(task, time_elapsed))
 
 # now we're ready to train w2v model
 # parameters are chosen from original paper (min_count=5, size=50)
 # then reduce if crash due to lack of memory
-train_model = False
+train_model = True
 model_name = 'w2v_top5_diag'
 emb_dim = 50
 
@@ -64,9 +64,9 @@ min_count = 5
 print('\n===== Word2Vec model =====')
 if train_model:
     time0 = time.time()
-    print(f'Training w2v with: ')
-    print(f'dimension: {emb_dim}')
-    print(f'min count: {min_count}')
+    print('Training w2v with: ')
+    print('dimension: {}'.format(emb_dim))
+    print('min count: {}'.format(min_count))
 
     w2v = Word2Vec(df['text_token'].tolist(),
                    size=emb_dim,
@@ -75,11 +75,11 @@ if train_model:
                    negative=15,
                    iter=10,
                    workers=multiprocessing.cpu_count())
-    w2v.save(f'../model/{model_name}.model')
+    w2v.save('../model/{}.model'.format(model_name))
 
     time_elapsed = time.time() - time0
     task = 'Train W2V model'
-    print(f'{task} complete.    Total elapsed time: {time_elapsed}')
+    print('{} complete.    Total elapsed time: {}'.format(task, time_elapsed))
 else:
     #w2v = Word2Vec.load(f'../model/{model_name}.model')
     pass
