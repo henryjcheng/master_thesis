@@ -25,7 +25,7 @@ from nltk.tokenize import word_tokenize
 # load data
 print('\n===== Load Data =====')
 time0 = time.time()
-conn = sqlite3.connect('../database/mimic.db')
+conn = sqlite3.connect('../../database/mimic.db')
 sql = 'SELECT a.text_cleaned as text ' \
       'FROM notes_cleaned a ' \
       'INNER JOIN (SELECT DISTINCT hadm_id '\
