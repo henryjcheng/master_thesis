@@ -11,5 +11,6 @@ sqlite3 ../../database/mimic.db \
     ".import "../../data/mimic/PATIENTS.csv" patients" \
     ".import "../../data/mimic/PRESCRIPTIONS.csv" prescriptions" \
     ".import "../../data/mimic/PROCEDURES_ICD.csv" procedures_icd" \
+    ".import "../../data/mimic/ADMISSIONS.csv" admissions" \
     ".read alter_table.sql" \
     ".quit"
