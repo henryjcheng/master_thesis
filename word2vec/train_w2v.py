@@ -75,7 +75,7 @@ if train_model:
                    negative=15,
                    iter=10,
                    workers=multiprocessing.cpu_count())
-    w2v.save('../model/{}.model'.format(model_name))
+    w2v.save('../../model/{}.model'.format(model_name))
 
     time_elapsed = time.time() - time0
     task = 'Train W2V model'
