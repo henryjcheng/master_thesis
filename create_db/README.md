@@ -2,6 +2,8 @@
 Run following script to create mimic database using SQLite: 
 ```shell script
 ./create_db.sh
+python clean_mask_box.py
+python concat_text.py
 ```
 ### Data Type Issue
 SQLite assumes all fields are TEXT when import from csv.  
