@@ -12,6 +12,7 @@ Work directory should following this layout:
 ```
 _data/mimic_ folder contains the following csv files (downloaded from [MIMIC-III](https://physionet.org/content/mimiciii/1.4/)):
 ```text
+ADMISSIONS.csv
 D_CPT.csv
 D_ICD_DIAGNOSES.csv
 D_ICD_PROCEDURES.csv
