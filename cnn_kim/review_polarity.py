@@ -50,6 +50,8 @@ def create_dataset(path_data):
             list_reviews.append(orig_rev)
 
     df_positive = pd.DataFrame(list_reviews, columns=['text'])
+    df_positive['text'] = df_positive['text'].str[2:]    # remove b'
+    df_positive['text'] = df_positive['text'].str.strip()
     df_positive['polarity'] = 1
 
     list_reviews = []
@@ -63,17 +65,19 @@ def create_dataset(path_data):
                 list_reviews.append(orig_rev)
 
     df_negative = pd.DataFrame(list_reviews, columns=['text'])
+    df_negative['text'] = df_negative['text'].str[2:]    # remove b'
+    df_negative['text'] = df_negative['text'].str.strip()
     df_negative['polarity'] = 0
 
     return df_positive, df_negative
 
+if __name__ == "__main__":
+    path_data = '../../data/movie_review'
 
-path_data = '../../data/movie_review'
+    df_positive, df_negative = create_dataset(path_data)
 
-df_positive, df_negative = create_dataset(path_data)
+    print(df_positive.head())
+    print(df_positive.shape)
 
-print(df_positive.head())
-print(df_positive.shape)
-
-print(df_negative.head())
-print(df_negative.shape)
+    print(df_negative.head())
+    print(df_negative.shape)
