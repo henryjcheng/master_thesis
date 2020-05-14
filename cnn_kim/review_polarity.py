@@ -14,6 +14,8 @@ import os
 import sys
 import re
 import pandas as pd
+import gensim.downloader as api
+from nltk.tokenize import word_tokenize
 
 def clean_str(string, TREC=False):
     """
@@ -50,6 +52,7 @@ def create_dataset(path_data, polarity='positive'):
         indicator = 0
 
     list_reviews = []
+    list_vocab = []
     with open(os.path.join(path_data, file_name), "rb") as f:
         for line in f:
             rev = []
@@ -59,21 +62,50 @@ def create_dataset(path_data, polarity='positive'):
 
             list_reviews.append(orig_rev)
 
+            words = set(orig_rev.split())
+            for word in words:
+                if word is not None:
+                    list_vocab.append(word)
+
     df = pd.DataFrame(list_reviews, columns=['text'])
     df['text'] = df['text'].str[2:]     # remove b'
     df['text'] = df['text'].str.strip() # remove white space
     df['polarity'] = indicator
 
-    return df
+    return df, list_vocab
 
 if __name__ == "__main__":
+    # load data into pandas df
+    print('Creating dataset...')
     path_data = '../../data/movie_review'
 
-    df_positive = create_dataset(path_data, 'positive')
-    df_negative = create_dataset(path_data, 'negative')
+    df_positive, vocab_positive = create_dataset(path_data, 'positive')
+    df_negative, vocab_negative = create_dataset(path_data, 'negative')
 
-    print(df_positive.head())
-    print(df_positive.shape)
+    # load word2vec model by Google
+    print('Load w2v model...')
+    model = api.load("word2vec-google-news-300")
 
-    print(df_negative.head())
-    print(df_negative.shape)
+    # repalcing words not in vocab with 'unk'
+    print('Replacing new words with \'unk\'...')
+    vocab = []
+    for word in vocab_positive:
+        vocab.append(word)
+    for word in vocab_negative:
+        vocab.append(word)
+
+    vocab_new = []
+    for word in vocab:
+        if word not in model.wv.vocab:
+            vocab_new.append(word)
+    
+    list_positive = df_positive['text'].tolist()
+    print(list_positive)
+
+    # tokenization
+
+    # embedding
+    # df_positive['embedding'] = df_positive['text_token'].apply(lambda x: model[x])
+    # df_negative['embedding'] = df_negative['text_token'].apply(lambda x: model[x])
+
+    # print(df_positive['embedding'][:5])
