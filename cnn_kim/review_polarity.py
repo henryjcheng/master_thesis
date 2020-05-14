@@ -9,6 +9,8 @@ https://arxiv.org/pdf/1408.5882.pdf
 http://www.wildml.com/2015/12/implementing-a-cnn-for-text-classification-in-tensorflow/
 https://github.com/yoonkim/CNN_sentence
 https://github.com/dennybritz/cnn-text-classification-tf
+
+05/13/20 - todo: need to switch to load model first, then replace new vocab with 'unk'
 """
 import os
 import sys
