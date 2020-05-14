@@ -35,12 +35,22 @@ def clean_str(string, TREC=False):
     string = re.sub(r"\s{2,}", " ", string)    
     return string.strip() if TREC else string.strip().lower()
 
-def create_dataset(path_data):
+def create_dataset(path_data, polarity='positive'):
     """
     This function reads movie review data file and create pd.DataFrame.
+    
+    polarity takes 'positive' or 'negative'
+    if postive, polarity == 1 else 0
     """
+    if polarity == 'positive':
+        file_name = 'rt-polarity.pos'
+        indicator = 1
+    else:
+        file_name = 'rt-polarity.neg'
+        indicator = 0
+
     list_reviews = []
-    with open(os.path.join(path_data, 'rt-polarity.pos'), "rb") as f:
+    with open(os.path.join(path_data, file_name), "rb") as f:
         for line in f:
             rev = []
             rev.append(str(line.strip()))
@@ -49,32 +59,18 @@ def create_dataset(path_data):
 
             list_reviews.append(orig_rev)
 
-    df_positive = pd.DataFrame(list_reviews, columns=['text'])
-    df_positive['text'] = df_positive['text'].str[2:]    # remove b'
-    df_positive['text'] = df_positive['text'].str.strip()
-    df_positive['polarity'] = 1
+    df = pd.DataFrame(list_reviews, columns=['text'])
+    df['text'] = df['text'].str[2:]     # remove b'
+    df['text'] = df['text'].str.strip() # remove white space
+    df['polarity'] = indicator
 
-    list_reviews = []
-    with open(os.path.join(path_data, 'rt-polarity.neg'), "rb") as f:
-            for line in f:
-                rev = []
-                rev.append(str(line.strip()))
-
-                orig_rev = clean_str(" ".join(rev))
-
-                list_reviews.append(orig_rev)
-
-    df_negative = pd.DataFrame(list_reviews, columns=['text'])
-    df_negative['text'] = df_negative['text'].str[2:]    # remove b'
-    df_negative['text'] = df_negative['text'].str.strip()
-    df_negative['polarity'] = 0
-
-    return df_positive, df_negative
+    return df
 
 if __name__ == "__main__":
     path_data = '../../data/movie_review'
 
-    df_positive, df_negative = create_dataset(path_data)
+    df_positive = create_dataset(path_data, 'positive')
+    df_negative = create_dataset(path_data, 'negative')
 
     print(df_positive.head())
     print(df_positive.shape)
