@@ -10,14 +10,16 @@ http://www.wildml.com/2015/12/implementing-a-cnn-for-text-classification-in-tens
 https://github.com/yoonkim/CNN_sentence
 https://github.com/dennybritz/cnn-text-classification-tf
 
-05/13/20 - todo: need to switch to load model first, then replace new vocab with 'unk'
+05/13/20 - todo: fix zero padding not working issue
 """
 import os
 import sys
 import re
 import pandas as pd
-import gensim.downloader as api
+import numpy as np
+from gensim.models import Word2Vec
 from nltk.tokenize import word_tokenize
+import multiprocessing
 
 def clean_str(string, TREC=False):
     """
@@ -61,53 +63,82 @@ def create_dataset(path_data, polarity='positive'):
             rev.append(str(line.strip()))
 
             orig_rev = clean_str(" ".join(rev))
-
             list_reviews.append(orig_rev)
-
-            words = set(orig_rev.split())
-            for word in words:
-                if word is not None:
-                    list_vocab.append(word)
 
     df = pd.DataFrame(list_reviews, columns=['text'])
     df['text'] = df['text'].str[2:]     # remove b'
     df['text'] = df['text'].str.strip() # remove white space
     df['polarity'] = indicator
 
-    return df, list_vocab
+    return df
+
+def zero_padding(list_to_pad, max_length, pad_dimension):
+    """
+    This function takes a list and add list of zeros until max_length is reached.
+    The number of zeroes in added list is determined by pad_dimension, which is the 
+    same as the dimension of the word2vec model.
+
+    This function is intended to handle one list only so it can be passed 
+    into a dataframe as a lambda function.
+    """
+    # find number of padding vector needed
+    num_pad = max_length - len(list_to_pad)
+    vector_pad = np.zeros(pad_dimension)
+
+    iteration = 0
+    while iteration < num_pad:
+        np.concatenate(list_to_pad, vector_pad)
+        iteration += 1
+    return list_to_pad
+
 
 if __name__ == "__main__":
     # load data into pandas df
     print('Creating dataset...')
     path_data = '../../data/movie_review'
 
-    df_positive, vocab_positive = create_dataset(path_data, 'positive')
-    df_negative, vocab_negative = create_dataset(path_data, 'negative')
+    df_positive = create_dataset(path_data, 'positive')
+    df_negative = create_dataset(path_data, 'negative')
 
-    # load word2vec model by Google
-    print('Load w2v model...')
-    model = api.load("word2vec-google-news-300")
-
-    # repalcing words not in vocab with 'unk'
-    print('Replacing new words with \'unk\'...')
-    vocab = []
-    for word in vocab_positive:
-        vocab.append(word)
-    for word in vocab_negative:
-        vocab.append(word)
-
-    vocab_new = []
-    for word in vocab:
-        if word not in model.wv.vocab:
-            vocab_new.append(word)
-    
-    list_positive = df_positive['text'].tolist()
-    print(list_positive)
+    df = pd.concat([df_positive, df_negative]).reset_index(drop=True)
 
     # tokenization
+    print('Tokenization...')
+    df['text_token'] = df['text'].apply(lambda x: word_tokenize(x))
+
+    # train word2vec
+    print('Training word2vec...')
+
+
+    train_model = False
+    model_name = 'w2v_movie_review'
+    emb_dim = 50
+
+    min_count = 1
+
+    if train_model:
+        w2v = Word2Vec(df['text_token'].tolist(),
+                    size=emb_dim,
+                    window=5,
+                    min_count=min_count,
+                    negative=15,
+                    iter=10,
+                    workers=multiprocessing.cpu_count())
+        w2v.save('../../model/{}.model'.format(model_name))
+    else:
+        w2v = Word2Vec.load('../../model/{}.model'.format(model_name))
 
     # embedding
-    # df_positive['embedding'] = df_positive['text_token'].apply(lambda x: model[x])
-    # df_negative['embedding'] = df_negative['text_token'].apply(lambda x: model[x])
+    print('Embedding...')
+    df['embedding'] = df['text_token'].apply(lambda x: w2v[x])
 
-    # print(df_positive['embedding'][:5])
+    # padding 
+    print('Padding...')
+    # find max text length
+    df['text_length'] = df['text'].apply(lambda x: len(x))
+    max_length = max(df['text_length'])
+
+    df['embedding'] = df['embedding'].apply(lambda x: zero_padding(x, max_length, emb_dim))
+
+    print(len(df['embedding'][1]))
+    print(df['embedding'][1])
