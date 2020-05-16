@@ -83,13 +83,18 @@ def zero_padding(list_to_pad, max_length, pad_dimension):
     """
     # find number of padding vector needed
     num_pad = max_length - len(list_to_pad)
-    vector_pad = np.zeros(pad_dimension)
+
+    # vector_pad = np.zeros(pad_dimension)
+    vector_pad = np.asarray([0] * pad_dimension, dtype=np.float32)
+    vector_pad = [vector_pad]    # convert to list of np.ndarray so we can append together 
 
     iteration = 0
     while iteration < num_pad:
-        np.concatenate(list_to_pad, vector_pad)
+        list_to_pad = np.append(list_to_pad, vector_pad, axis=0)
         iteration += 1
+    
     return list_to_pad
+    
 
 
 if __name__ == "__main__":
