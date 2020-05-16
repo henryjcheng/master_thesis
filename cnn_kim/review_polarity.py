@@ -9,8 +9,6 @@ https://arxiv.org/pdf/1408.5882.pdf
 http://www.wildml.com/2015/12/implementing-a-cnn-for-text-classification-in-tensorflow/
 https://github.com/yoonkim/CNN_sentence
 https://github.com/dennybritz/cnn-text-classification-tf
-
-05/13/20 - todo: fix zero padding not working issue
 """
 import os
 import sys
@@ -20,6 +18,9 @@ import numpy as np
 from gensim.models import Word2Vec
 from nltk.tokenize import word_tokenize
 import multiprocessing
+
+import torch.nn as nn
+import torch.nn.functional as F
 
 def clean_str(string, TREC=False):
     """
@@ -96,8 +97,8 @@ def zero_padding(list_to_pad, max_length, pad_dimension):
     return list_to_pad
     
 
-
 if __name__ == "__main__":
+    # ===== 1. Preprocessing ===== 
     # load data into pandas df
     print('Creating dataset...')
     path_data = '../../data/movie_review'
@@ -113,7 +114,6 @@ if __name__ == "__main__":
 
     # train word2vec
     print('Training word2vec...')
-
 
     train_model = False
     model_name = 'w2v_movie_review'
@@ -145,5 +145,26 @@ if __name__ == "__main__":
 
     df['embedding'] = df['embedding'].apply(lambda x: zero_padding(x, max_length, emb_dim))
 
-    print(len(df['embedding'][1]))
-    print(df['embedding'][1])
+    # ===== 2. Define CNN Architecture =====
+    class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(3, 6, 2, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 2, padding=1)
+        self.conv3 = nn.Conv2d(16, 24, 2, padding=1)
+        self.fc1 = nn.Linear(24 * 4 * 4, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        x = x.view(-1, 24 * 4 * 4)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+# 05/15/20 ToDO: create convolutional layer with custom filter/kernel size
