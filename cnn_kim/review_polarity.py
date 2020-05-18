@@ -20,6 +20,7 @@ from gensim.models import Word2Vec
 from nltk.tokenize import word_tokenize
 import multiprocessing
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -155,31 +156,37 @@ if __name__ == "__main__":
     # and then bind them together as one input with different channels
 
     class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
+        def __init__(self):
+            super(Net, self).__init__()
 
-        kernel_size = [2, 3, 4, 5]
-        self.conv1 = nn.Conv2d(1, 4, 50)      # input channel, output channel, kernel size
-        self.pool = nn.MaxPool2d((217, 1), 1) 
-        self.fc1 = nn.Linear(4 * 1 * 1, 1)
-        self.sig = nn.Sigmoid()
-    
-    def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = x.view(-1, 4 * 4 * 1)
-        x = self.fc1(x)
-        x = sig(x)
-        return x
+            kernel_size = [2, 3, 4, 5]
+            self.conv1 = nn.Conv2d(1, 4, 50)      # input channel, output channel, kernel size
+            self.pool = nn.MaxPool2d((217, 1), 1) 
+            self.fc1 = nn.Linear(4 * 1 * 1, 1)
+            self.sig = nn.Sigmoid()
+        
+        def forward(self, x):
+            x = self.pool(F.relu(self.conv1(x)))
+            x = x.view(-1, 4 * 4 * 1)
+            x = self.fc1(x)
+            x = sig(x)
+            return x
     
     model = Net()
 
     # Define loss and optimization function
     loss = nn.BCELoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     # train on GPU
     device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
     print('GPU Device: {}'.format(device))
 
     model.to(device)
+
+    # convert pd.DataFrame to pytorch tensor
+    # doesn't work
+    #inputs = torch.tensor(df['embedding'].values)
+    #labels = torch.tensor(df['polarity'].values)
+    print(inputs)
         
