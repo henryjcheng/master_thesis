@@ -9,6 +9,7 @@ https://arxiv.org/pdf/1408.5882.pdf
 http://www.wildml.com/2015/12/implementing-a-cnn-for-text-classification-in-tensorflow/
 https://github.com/yoonkim/CNN_sentence
 https://github.com/dennybritz/cnn-text-classification-tf
+https://github.com/Shawn1993/cnn-text-classification-pytorch
 """
 import os
 import sys
@@ -146,25 +147,21 @@ if __name__ == "__main__":
     df['embedding'] = df['embedding'].apply(lambda x: zero_padding(x, max_length, emb_dim))
 
     # ===== 2. Define CNN Architecture =====
+    # Not sure how to write convolutional layer with custom filter/kernel size
+    # so we will use the same kernel size as the filter, just to get the model working
+
     class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 2, padding=1)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 2, padding=1)
-        self.conv3 = nn.Conv2d(16, 24, 2, padding=1)
-        self.fc1 = nn.Linear(24 * 4 * 4, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
 
+        kernel_size = [2, 3, 4, 5]
+        self.conv1 = nn.Conv2d(1, 4, 50)      # input channel, output channel, kernel size
+        self.pool = nn.MaxPool2d((217, 1), 1) 
+        self.fc1 = nn.Linear(4 * 1 * 1, 1)
+    
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
-        x = x.view(-1, 24 * 4 * 4)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = x.view(-1, 4 * 4 * 1)
+        x = self.fc1(x)
         return x
-
-# 05/15/20 ToDO: create convolutional layer with custom filter/kernel size
+        
