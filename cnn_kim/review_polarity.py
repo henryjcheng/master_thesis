@@ -16,6 +16,7 @@ import sys
 import re
 import pandas as pd
 import numpy as np
+import random
 from gensim.models import Word2Vec
 from nltk.tokenize import word_tokenize
 import multiprocessing
@@ -60,7 +61,6 @@ def create_dataset(path_data, polarity='positive'):
         indicator = 0
 
     list_reviews = []
-    list_vocab = []
     with open(os.path.join(path_data, file_name), "rb") as f:
         for line in f:
             rev = []
@@ -69,7 +69,13 @@ def create_dataset(path_data, polarity='positive'):
             orig_rev = clean_str(" ".join(rev))
             list_reviews.append(orig_rev)
 
-    df = pd.DataFrame(list_reviews, columns=['text'])
+    # assign 10-fold cross validation
+    random.seed(1)
+    list_rand = []
+    for i in range(len(list_reviews)):
+        list_rand.append(random.randint(1, 10))
+    
+    df = pd.DataFrame(zip(list_reviews, list_rand), columns=['text', 'fold'])
     df['text'] = df['text'].str[2:]     # remove b'
     df['text'] = df['text'].str.strip() # remove white space
     df['polarity'] = indicator
@@ -184,9 +190,9 @@ if __name__ == "__main__":
 
     model.to(device)
 
-    # convert pd.DataFrame to pytorch tensor
-    # doesn't work
-    #inputs = torch.tensor(df['embedding'].values)
-    #labels = torch.tensor(df['polarity'].values)
-    print(inputs)
-        
+    # define training data
+    # using 1 set of 10-fold
+    train = df[df['fold'] != 10][['embedding', 'polarity']].reset_index(drop=True)
+    test = df[df['fold'] == 10][['embedding', 'polarity']].reset_index(drop=True)
+
+    inputs, labels = train['embedding'].sample(frac=1).tolist(), train['polarity'].sample(frac=1).tolist()
