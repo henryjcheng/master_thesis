@@ -22,6 +22,7 @@ import multiprocessing
 
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 
 def clean_str(string, TREC=False):
     """
@@ -149,6 +150,9 @@ if __name__ == "__main__":
     # ===== 2. Define CNN Architecture =====
     # Not sure how to write convolutional layer with custom filter/kernel size
     # so we will use the same kernel size as the filter, just to get the model working
+    # looks like using bracket at kernel size let you define uneven kernels (x, y)
+    # so the problem is then how to apply differnt kernel to the same input
+    # and then bind them together as one input with different channels
 
     class Net(nn.Module):
     def __init__(self):
@@ -158,10 +162,24 @@ if __name__ == "__main__":
         self.conv1 = nn.Conv2d(1, 4, 50)      # input channel, output channel, kernel size
         self.pool = nn.MaxPool2d((217, 1), 1) 
         self.fc1 = nn.Linear(4 * 1 * 1, 1)
+        self.sig = nn.Sigmoid()
     
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
         x = x.view(-1, 4 * 4 * 1)
         x = self.fc1(x)
+        x = sig(x)
         return x
+    
+    model = Net()
+
+    # Define loss and optimization function
+    loss = nn.BCELoss()
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+
+    # train on GPU
+    device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
+    print('GPU Device: {}'.format(device))
+
+    model.to(device)
         
