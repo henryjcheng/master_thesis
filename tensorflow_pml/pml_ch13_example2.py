@@ -18,7 +18,7 @@ with g.as_default():
     x = tf.placeholder(dtype=tf.float32,
                        shape={None, 2, 3},
                        name='input_x')
-    x2 = tf.reshape(x, shape=(-1, 6), name='x2')
+    x2 = tf.reshape(x, shape=(-1, 6), name='x2')    # use -1 because input batch size unknown
 
     ## calculate the sum of each column
     xsum = tf.reduce_sum(x2, axis=0, name='col_sum')
