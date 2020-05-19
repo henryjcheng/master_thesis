@@ -1,5 +1,6 @@
 """
 Implementation of the book Python Machine Learning Ch. 13 on Tensorflow
+page 426
 """
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior() 
